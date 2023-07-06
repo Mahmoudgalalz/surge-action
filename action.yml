@@ -7,7 +7,11 @@ inputs:
   path:
     description: 'the project build output dir'
     default: './dist'
-
+  build:
+    description: 'building the project'
+    default: |
+      npm ci
+      npm run build
 outputs:
   domain:
     description: 'the published domain'
@@ -16,4 +20,4 @@ runs:
   main: 'dist/index.js'
 branding:
   icon: cloud
-  color: 'green'
+  color: 'blue'
