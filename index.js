@@ -1,22 +1,23 @@
 const core = require('@actions/core')
 const exec = require('@actions/exec')
-const tc = require('@actions/tool-cache')
+const sg = require('surge')
+const io = require('@actions/io')
 const options ={};
 
-async function setup(){
-    try{
-        await exec.exec('npm',['install','-g','surge'],{ignoreReturnCode:true})
-    }
-    catch(err){
-        core.setFailed(err.message)
-    }
+async function build(commands,path){
+    const command = commands.split('\n')
+    command.forEach(com => {
+        core.info(`Running: ${com}`)
+        exec.exec(com);
+    });
+    core.info("Injecting 200.html")
+    io.mv(path+'index.html',path+'200.html')
+    core.info('Build done')
 }
-
 async function run(){
     try{
         const domain = core.getInput('domain')
         const path = core.getInput('path')
-        await setup();
         
         let output = ''
         let errors = ''
@@ -29,11 +30,11 @@ async function run(){
                 errors+=data.toString()
             }
         }
+        const commands = core.getInput(build)
+        build(commands,path)
 
-        if(domain === '_'){
-            await exec.exec('surge',[`${path}`,`${domain}`],options)
-        }
-        await exec.exec('surge',[`${path}`,'--domain',`${domain}`],options)
+        sg({ default: "publish" })([path, domain]);
+        core.info('Deployment done!')
         core.setOutput('domain',output)
     }
     catch(err){
